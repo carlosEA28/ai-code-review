@@ -1,0 +1,20 @@
+env_files = [".env"]
+root = "."
+tmp_dir = "tmp"
+
+[build]
+  cmd = "go build -o ./tmp/app ./cmd/app"
+  entrypoint = ["./tmp/app"]
+  include_ext = ["go", "tpl", "tmpl", "html"]
+  include_file = [".env"]
+  exclude_dir = ["tmp", "vendor", ".git", "testdata"]
+  exclude_regex = ["_test.go"]
+  delay = 500
+  send_interrupt = true
+  kill_delay = "0s"
+
+[log]
+  time = true
+
+[misc]
+  clean_on_exit = true

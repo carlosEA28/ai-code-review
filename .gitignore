@@ -1,0 +1,6 @@
+# Environment
+.env
+
+# Air
+tmp/
+build-errors.log
