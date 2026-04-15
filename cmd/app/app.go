@@ -24,7 +24,9 @@ func main() {
 	defer database.Close()
 
 	userRepository := repository.NewUserRepository(database)
+	webhookRepository := repository.NewWebhookRepository(database)
 	userService := service.NewUserService(userRepository)
+	webhookService := service.NewWebhookService(webhookRepository, os.Getenv("REVIEW_MODEL"))
 
 	jwtService, err := service.NewJWTService(service.JWTConfig{
 		SecretKey:  os.Getenv("JWT_SECRET"),
@@ -44,7 +46,13 @@ func main() {
 		log.Fatal("Error creating auth service: ", err)
 	}
 
-	srv := server.NewServer(port, authService, jwtService)
+	srv := server.NewServer(
+		port,
+		authService,
+		jwtService,
+		webhookService,
+		os.Getenv("GITHUB_WEBHOOK_SECRET"),
+	)
 
 	if err = srv.Start(); err != nil {
 		log.Fatal("Error starting server: ", err)

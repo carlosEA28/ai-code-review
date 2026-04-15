@@ -10,27 +10,39 @@ import (
 )
 
 type Server struct {
-	router       *chi.Mux
-	server       *http.Server
-	port         string
-	authUseCase  service.AuthUseCase
-	tokenUseCase service.TokenUseCase
+	router         *chi.Mux
+	server         *http.Server
+	port           string
+	authUseCase    service.AuthUseCase
+	tokenUseCase   service.TokenUseCase
+	webhookUseCase service.WebhookUseCase
+	webhookSecret  string
 }
 
-func NewServer(port string, authUseCase service.AuthUseCase, tokenUseCase service.TokenUseCase) *Server {
+func NewServer(
+	port string,
+	authUseCase service.AuthUseCase,
+	tokenUseCase service.TokenUseCase,
+	webhookUseCase service.WebhookUseCase,
+	webhookSecret string,
+) *Server {
 	return &Server{
-		router:       chi.NewRouter(),
-		port:         port,
-		authUseCase:  authUseCase,
-		tokenUseCase: tokenUseCase,
+		router:         chi.NewRouter(),
+		port:           port,
+		authUseCase:    authUseCase,
+		tokenUseCase:   tokenUseCase,
+		webhookUseCase: webhookUseCase,
+		webhookSecret:  webhookSecret,
 	}
 }
 
 func (s *Server) ConfigureRoutes() {
 	authHandler := handlers.NewAuthHandler(s.authUseCase)
+	webhookHandler := handlers.NewWebhookHandler(s.webhookUseCase, s.webhookSecret)
 
 	s.router.Get("/auth/github/login", authHandler.GithubLogin)
 	s.router.Get("/auth/github/callback", authHandler.GithubCallback)
+	s.router.Post("/webhooks/github", webhookHandler.HandleGithubWebhook)
 
 	s.router.Group(func(r chi.Router) {
 		r.Use(middleware.AuthMiddleware(s.tokenUseCase))
